@@ -22,5 +22,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #define TAPPING_TOGGLE 1
-#define RGBLIGHT_SPLIT
 // #define USE_I2C

@@ -11,9 +11,14 @@ extern keymap_config_t keymap_config;
 
 #define LY_SP LT(_FN1, KC_SPC)
 #define LCA_ESC LCA_T(KC_ESC)
+#define LCA_SFT LCA_T(KC_RSFT)
+#define FL_SCRN LCA(KC_ENT)
+#define LCAG_SF LCAG_T(KC_LSFT)
 #define DSK_LFT LCTL(KC_LEFT)
 #define DSK_RHT LCTL(KC_RGHT)
 
+#define BASE_COLOR HSV_BLUE
+#define FN_COLOR 33, 163, 255
 enum custom_keycodes {
   QWERTY = SAFE_RANGE,
   ITERM,
@@ -32,17 +37,21 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ITERM,   SAFARI,  KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC, KC_RBRC, KC_BSLS, KC_PGUP, \
     SSHKFKA, SSHPPLE, KC_ESC,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT, KC_ENT,  KC_PGDN, \
     MSGS,    SPOT,    KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_RSFT, KC_UP,   KC_END, \
-    GSTAT,   SLACK,   TT(_FN1),KC_LCTL, KC_LALT, KC_LGUI, LY_SP,            MO(_FN1),KC_SPC,  KC_RGUI, KC_RALT, KC_RCTL, KC_LEFT, KC_DOWN, KC_RGHT
+    GSTAT,   SLACK,   TT(_FN1),KC_LCTL, KC_LALT, KC_LGUI, LY_SP,            MO(_FN1),LY_SP,  KC_RGUI, KC_RALT, KC_RCTL, KC_LEFT, KC_DOWN, KC_RGHT
   ),
 
   [_FN1] = LAYOUT_65_with_macro(
-    RGB_TOG, KC_WAKE, KC_GRV,  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  KC_DEL,  KC_BSPC, RESET, \
-    RGB_SAI, RGB_HUI, _______, _______, KC_UP,   _______, _______, _______, _______, _______, _______, KC_MPRV, KC_MPLY, KC_MNXT, _______, _______, EEP_RST, \
-    RGB_M_K, RGB_VAI, LCA_ESC, KC_LEFT, KC_DOWN, KC_RGHT, _______, _______, DSK_LFT, KC_BRMD, KC_BRMU, DSK_RHT, _______, _______, _______, DEBUG, \
-    RGB_M_P, RGB_M_B, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, \
+    RGB_TOG, _______, KC_GRV,  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  KC_DEL,  KC_BSPC, RESET, \
+    RGB_SAI, RGB_HUI, _______, _______, _______, KC_UP,   _______, _______, _______, _______, _______, KC_MPRV, KC_MPLY, KC_MNXT, _______, _______, EEP_RST, \
+    RGB_M_K, RGB_VAI, LCA_ESC, _______, KC_LEFT, KC_DOWN, KC_RGHT, _______, DSK_LFT, KC_BRMD, KC_BRMU, DSK_RHT, _______, _______, FL_SCRN, DEBUG, \
+    RGB_M_P, RGB_M_B, LCAG_SF, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, LCA_SFT, _______, _______, \
     RGB_M_R, RGB_M_X, _______, _______, _______, _______, _______,          _______, _______, _______, _______, _______, _______, _______, _______
   )
 };
+
+void keyboard_post_init_user(void) {
+  rgblight_sethsv_noeeprom(HSV_GOLD);
+}
 
 void encoder_update_user(uint8_t index, bool clockwise) 
 {
@@ -65,22 +74,27 @@ void encoder_update_user(uint8_t index, bool clockwise)
     }
 }
 
-layer_state_t layer_state_set_user(layer_state_t state) 
-{
-    switch (get_highest_layer(state)) {
-    case _FN1:
-        rgblight_setrgb(0x00,  0x00, 0xFF);
-        break;
+void update_led(void) {
+    switch (biton32(layer_state)) {
     case _BASE:
-        rgblight_setrgb(0x00,  0xFF, 0x00);
+        rgblight_sethsv_noeeprom(BASE_COLOR);
         break;
-    default: //  for any other layers, or the default layer
-        rgblight_setrgb(0x00,  0xFF, 0xFF);
+    case _FN1:
+        rgblight_sethsv_noeeprom(FN_COLOR);
         break;
+    default:
+        rgblight_sethsv_noeeprom(HSV_GOLD);
     }
+}
+
+uint32_t layer_state_set_user(uint32_t state) {
+  update_led();
   return state;
 }
 
+void led_set_user(uint8_t usb_led) {
+  update_led();
+}
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record)
 {
